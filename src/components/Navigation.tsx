@@ -1,10 +1,36 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ShoppingCart, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+    navigate("/login");
+  };
 
   return (
     <nav className="bg-white shadow-md">
@@ -27,6 +53,23 @@ export const Navigation = () => {
             <Link to="/cart" className="text-gray-700 hover:text-primary transition-colors">
               Cart
             </Link>
+            {user ? (
+              <Button
+                variant="ghost"
+                className="text-gray-700 hover:text-primary transition-colors"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                Sign Out
+              </Button>
+            ) : (
+              <Link
+                to="/login"
+                className="text-gray-700 hover:text-primary transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -72,6 +115,25 @@ export const Navigation = () => {
             >
               Cart
             </Link>
+            {user ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 text-gray-700 hover:text-primary transition-colors"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="block px-3 py-2 text-gray-700 hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}
