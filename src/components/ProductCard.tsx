@@ -2,17 +2,25 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/hooks/useCart";
+import { Tables } from "@/integrations/supabase/types";  // Import Supabase types
 
 interface ProductCardProps {
   id: string;
   name: string;
   price: number;
-  image: string;
+  image_url: string;  // Changed from 'image' to 'image_url'
   description: string;
   stock: number;
 }
 
-export const ProductCard = ({ id, name, price, image, description, stock }: ProductCardProps) => {
+export const ProductCard = ({ 
+  id, 
+  name, 
+  price, 
+  image_url,  // Updated parameter name
+  description, 
+  stock 
+}: ProductCardProps) => {
   const { toast } = useToast();
   const { addToCart } = useCart();
 
@@ -26,7 +34,13 @@ export const ProductCard = ({ id, name, price, image, description, stock }: Prod
       return;
     }
     
-    addToCart({ id, name, price, image, quantity: 1 });
+    addToCart({ 
+      id, 
+      name, 
+      price, 
+      image: image_url,  // Map image_url to image for cart compatibility
+      quantity: 1 
+    });
     toast({
       title: "Added to cart",
       description: `${name} has been added to your cart.`,
@@ -37,7 +51,7 @@ export const ProductCard = ({ id, name, price, image, description, stock }: Prod
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105">
       <Link to={`/product/${id}`}>
         <img
-          src={image || "/placeholder.svg"}
+          src={image_url || "/placeholder.svg"}  // Updated to use image_url
           alt={name}
           className="w-full h-48 object-cover"
         />

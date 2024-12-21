@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";  // Import Supabase types
 
 const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,7 +55,11 @@ const Shop = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} {...product} />
+            <ProductCard 
+              key={product.id} 
+              {...product} 
+              image_url={product.image_url || "/placeholder.svg"}  // Ensure image_url is always provided
+            />
           ))}
         </div>
       )}
