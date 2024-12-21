@@ -2,45 +2,28 @@ import { useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-
-// Temporary mock data
-const products = [
-  {
-    id: "1",
-    name: "Wireless Headphones",
-    price: 99.99,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
-    description: "Premium wireless headphones with noise cancellation.",
-  },
-  {
-    id: "2",
-    name: "Smart Watch",
-    price: 199.99,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
-    description: "Feature-packed smartwatch with health tracking.",
-  },
-  {
-    id: "3",
-    name: "Laptop Backpack",
-    price: 49.99,
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500",
-    description: "Durable and stylish laptop backpack with multiple compartments.",
-  },
-  {
-    id: "4",
-    name: "Wireless Mouse",
-    price: 29.99,
-    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500",
-    description: "Ergonomic wireless mouse for comfortable use.",
-  },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredProducts = products.filter((product) =>
+  const { data: products, isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const filteredProducts = products?.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ) ?? [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -58,11 +41,23 @@ const Shop = () => {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} {...product} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} {...product} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
